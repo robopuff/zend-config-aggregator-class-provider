@@ -23,7 +23,7 @@ $aggregator = new ConfigAggregator([
 return $aggregator->getMergedConfig();
 ```
 
-For more details, please refer to the [documentation]().
+For more details, please refer to the [documentation](https://robopuff.github.io/zend-config-aggregator-class-provider).
 ---
 - [Issues](https://github.com/robopuff/zend-config-aggregator-class-provider/issues)
 - [Documentation](https://robopuff.github.io/zend-config-aggregator-class-provider) 
