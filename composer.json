@@ -1,0 +1,46 @@
+{
+  "name": "robopuff/zend-config-aggregator-class-provider",
+  "description": "A config aggregator provider designed to discover classes within provided glob pattern",
+  "type": "library",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "zf", "config-aggregator", "class-discovery"
+  ],
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  },
+  "autoload": {
+    "psr-4": {
+      "Robopuff\\ConfigAggregator\\ClassProvider\\": "src/"
+    } 
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "RobopuffTest\\ConfigAggregator\\ClassProvider\\": "test/"
+    }
+  },
+  "require": {
+    "php": "^7.1",
+    "zendframework/zend-config-aggregator": "^1.1",
+    "zendframework/zend-stdlib": "^3.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^0.9",
+    "phpunit/php-code-coverage": "^6.0",
+    "phpunit/phpunit": "^7.0",
+    "squizlabs/php_codesniffer": "^3.0"
+  },
+  "scripts": {
+    "check": [
+      "@analyse",
+      "@cs-check",
+      "@test"
+    ],
+    "analyse": "phpstan analyse --level 7 ./src",
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "test": "phpunit --colors=always",
+    "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+  }
+}

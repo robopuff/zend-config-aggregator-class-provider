@@ -1,0 +1,11 @@
+site_name: zend-config-aggregator-class-provider
+docs_dir: docs/book
+site_dir: docs/html
+pages:
+    - Home: index.html
+    - Usage: usage.md
+site_description: 'Provides an extension to the  zendframework/zend-config-aggregator to allow config class auto discovery based on glob pattern provided'
+repo_url: 'https://github.com/robopuff/zend-config-aggregator-class-provider'
+theme:
+  name: null
+  custom_dir: rbpf_cinder
