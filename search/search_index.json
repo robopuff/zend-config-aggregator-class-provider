@@ -1,0 +1,39 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "zend-config-aggregator-class-provider\n\n        \nA config aggregator provider designed to discover classes within provided glob pattern.\n\n        \n$ composer require robopuff/zend-config-aggregator-class-provider", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/usage/", 
+            "text": "Usage\n\n\nuse Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider(__DIR__ . '/src/{Dir1,Dir2}/*/ConfigProvider.php'),\n]);\n\nreturn $aggregator-\ngetMergedConfig();\n\n\n\n\nModes\n\n\nBy default \nClassDiscoveryProvider\n will be working using \nPREG\n method of discovering fully qualified class name,\nthis can be changed to:\n\n\n\n\nClassDiscoveryProvider::METHOD_PREG\n - \nDefault\n, reads file line by line\n\n\nClassDiscoveryProvider::METHOD_TOKENS\n - Reads whole file at once and then uses built-in php tokenizer\n\n\nClassDiscoveryProvider::METHOD_PATH\n - tries to determinate a FQCN based on it's path (PSR-4), it has a few options:\n\n\nbaseSrc\n - removes string from path\n\n\nprefix\n - adds this as a prefix to a namespace\n\n\nextension\n - by default it will get each file extension and it'll be removed but you can specify it manually\n\n\n\n\n\n\n\n\nSetting options\n\n\nGlobal\n\n\nuse Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n// Set up default for each instance of class\nClassDiscoveryProvider::setDefaultOptions([\n    'mode' =\n ClassDiscoveryProvider::METHOD_PATH\n])\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider(__DIR__ . '/src/*/ConfigProvider.php', [\n        'baseSrc' =\n __DIR__ . '/src',\n        'prefix' =\n 'Random\\\\Namespace\\\\'\n    ]),\n]);\n\nreturn $aggregator-\ngetMergedConfig();\n\n\n\n\nPer instance\n\n\nuse Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider('src/*/ConfigProvider.php', [\n        'mode' =\n ClassDiscoveryProvider::METHOD_PATH,\n        'baseSrc' =\n 'src',\n        'prefix' =\n 'Random\\\\Namespace\\\\'\n    ]),\n]);\n\nreturn $aggregator-\ngetMergedConfig();", 
+            "title": "Usage"
+        }, 
+        {
+            "location": "/usage/#usage", 
+            "text": "use Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider(__DIR__ . '/src/{Dir1,Dir2}/*/ConfigProvider.php'),\n]);\n\nreturn $aggregator- getMergedConfig();", 
+            "title": "Usage"
+        }, 
+        {
+            "location": "/usage/#modes", 
+            "text": "By default  ClassDiscoveryProvider  will be working using  PREG  method of discovering fully qualified class name,\nthis can be changed to:   ClassDiscoveryProvider::METHOD_PREG  -  Default , reads file line by line  ClassDiscoveryProvider::METHOD_TOKENS  - Reads whole file at once and then uses built-in php tokenizer  ClassDiscoveryProvider::METHOD_PATH  - tries to determinate a FQCN based on it's path (PSR-4), it has a few options:  baseSrc  - removes string from path  prefix  - adds this as a prefix to a namespace  extension  - by default it will get each file extension and it'll be removed but you can specify it manually", 
+            "title": "Modes"
+        }, 
+        {
+            "location": "/usage/#setting-options", 
+            "text": "", 
+            "title": "Setting options"
+        }, 
+        {
+            "location": "/usage/#global", 
+            "text": "use Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n// Set up default for each instance of class\nClassDiscoveryProvider::setDefaultOptions([\n    'mode' =  ClassDiscoveryProvider::METHOD_PATH\n])\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider(__DIR__ . '/src/*/ConfigProvider.php', [\n        'baseSrc' =  __DIR__ . '/src',\n        'prefix' =  'Random\\\\Namespace\\\\'\n    ]),\n]);\n\nreturn $aggregator- getMergedConfig();", 
+            "title": "Global"
+        }, 
+        {
+            "location": "/usage/#per-instance", 
+            "text": "use Robopuff\\ConfigAggregator\\ClassProvider\\ClassDiscoveryProvider;\nuse Zend\\ConfigAggregator\\ConfigAggregator;\n\n$aggregator = new ConfigAggregator([\n    new ClassDiscoveryProvider('src/*/ConfigProvider.php', [\n        'mode' =  ClassDiscoveryProvider::METHOD_PATH,\n        'baseSrc' =  'src',\n        'prefix' =  'Random\\\\Namespace\\\\'\n    ]),\n]);\n\nreturn $aggregator- getMergedConfig();", 
+            "title": "Per instance"
+        }
+    ]
+}
