@@ -25,6 +25,8 @@ this can be changed to:
 
 ## Setting options
 
+**Be aware** that options set in class constructor extend settings set as default.
+
 ### Global
 
 ```php

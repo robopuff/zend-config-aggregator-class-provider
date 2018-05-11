@@ -27,3 +27,6 @@ For more details, please refer to the [documentation](https://robopuff.github.io
 ---
 - [Issues](https://github.com/robopuff/zend-config-aggregator-class-provider/issues)
 - [Documentation](https://robopuff.github.io/zend-config-aggregator-class-provider) 
+
+To generate docs use MKDocs with theme [rbpf_cinder](https://github.com/robopuff/rbpf_cinder), a fork of 
+[cinder](https://github.com/chrissimpkins/cinder) theme.

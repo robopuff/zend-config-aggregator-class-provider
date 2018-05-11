@@ -4,3 +4,4 @@
 /phpunit.xml
 /vendor/
 /rbpf_cinder/
+composer.phar
