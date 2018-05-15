@@ -113,6 +113,10 @@ use Zend\ConfigAggregator\ConfigAggregator;
 
 $aggregator = new ConfigAggregator([
     new ClassDiscoveryProvider(__DIR__ . '/src/{Dir1,Dir2}/*/ConfigProvider.php'),
+    new ClassDiscoveryProvider([
+        '/src/Dir1/*/ConfigProvider.php',
+        '/src/Dir2/*/ConfigProvider.php'
+    ]),
 ]);
 
 return $aggregator-&gt;getMergedConfig();
@@ -132,6 +136,7 @@ this can be changed to:</p>
 </li>
 </ul>
 <h2 id="setting-options">Setting options</h2>
+<p><strong>Be aware</strong> that options set in class constructor extend settings set as default.</p>
 <h3 id="global">Global</h3>
 <pre><code class="php">use Robopuff\ConfigAggregator\ClassProvider\ClassDiscoveryProvider;
 use Zend\ConfigAggregator\ConfigAggregator;
