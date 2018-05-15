@@ -56,6 +56,12 @@ class ClassDiscoveryProviderTest extends TestCase
         $stub()->next();
     }
 
+    public function testInvalidPatternType()
+    {
+        $this->expectException(Exception\BadMethodCallException::class);
+        new ClassDiscoveryProvider(1);
+    }
+
     public function testPregMethod()
     {
         // Load class without namespace
@@ -73,6 +79,28 @@ class ClassDiscoveryProviderTest extends TestCase
         }
 
         $this->assertEquals(3, $countResponses);
+    }
+
+    /**
+     * @depends testPregMethod
+     */
+    public function testPregMethodWithAnArray()
+    {
+        $stub = new ClassDiscoveryProvider([
+            __DIR__ . '/TestAssets/Rest/DifferentAction/ConfigProvider.php',
+            __DIR__ . '/TestAssets/Rpc/CustomAction/ConfigProvider.php',
+            __DIR__ . '/TestAssets/InvalidFileThatDoesNotExist.php',
+        ], [
+            'method' => ClassDiscoveryProvider::METHOD_PREG
+        ]);
+
+        $countResponses = 0;
+        foreach ($stub() as $generator) {
+            $this->assertEquals(['ConfigProviderCorrectResponse'], $generator);
+            $countResponses++;
+        }
+
+        $this->assertEquals(2, $countResponses);
     }
 
     public function testTokenMethod()

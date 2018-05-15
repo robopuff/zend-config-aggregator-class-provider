@@ -43,7 +43,7 @@ class ClassDiscoveryProvider
     ];
 
     /**3
-     * @var string
+     * @var string|string[]
      */
     private $pattern;
 
@@ -64,9 +64,22 @@ class ClassDiscoveryProvider
 
     /**
      * Class discovery provider constructor
+     * @param string|string[] $pattern
+     * @throws Exception\BadMethodCallException
      */
-    public function __construct(string $pattern, array $options = [])
+    public function __construct($pattern, array $options = [])
     {
+        if (is_array($pattern)) {
+            $pattern = sprintf('{%s}', implode(',', $pattern));
+        }
+
+        if (!is_string($pattern)) {
+            throw new Exception\BadMethodCallException(sprintf(
+                'Pattern must be string or array of strings, %s given',
+                is_object($pattern) ? get_class($pattern) : gettype($pattern)
+            ));
+        }
+
         $this->pattern = $pattern;
         $this->options = array_merge(self::$defaultOptions, $options);
     }

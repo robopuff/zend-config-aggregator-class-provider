@@ -18,6 +18,10 @@ use Zend\ConfigAggregator\ConfigAggregator;
 
 $aggregator = new ConfigAggregator([
     new ClassDiscoveryProvider(__DIR__ . '/src/{Dir1,Dir2}/*/ConfigProvider.php'),
+    new ClassDiscoveryProvider([
+        'src/Dir1/*/ConfigProvider.php',
+        'src/Dir2/*/ConfigProvider.php'
+    ),
 ]);
 
 return $aggregator->getMergedConfig();
