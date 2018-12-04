@@ -137,9 +137,31 @@ class ClassDiscoveryProviderTest extends TestCase
         $this->assertEquals(1, $countResponses);
     }
 
-    public function testInvokeWithInvalidClass()
+    public function testPathInvokeWithInvalidClass()
     {
-        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/RestDifferentActionResource.php');
+        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/RestDifferentActionResource.php', [
+            'method' => ClassDiscoveryProvider::METHOD_PATH
+        ]);
+
+        $this->expectException(Exception\InvalidFileException::class);
+        $stub()->next();
+    }
+
+    public function testPregInvokeWithInvalidClass()
+    {
+        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/RestDifferentActionResource.php', [
+            'method' => ClassDiscoveryProvider::METHOD_PREG
+        ]);
+
+        $this->expectException(Exception\InvalidFileException::class);
+        $stub()->next();
+    }
+
+    public function testTokensInvokeWithInvalidClass()
+    {
+        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/RestDifferentActionResource.php', [
+            'method' => ClassDiscoveryProvider::METHOD_TOKENS
+        ]);
 
         $this->expectException(Exception\InvalidFileException::class);
         $stub()->next();
@@ -155,7 +177,19 @@ class ClassDiscoveryProviderTest extends TestCase
 
     public function testInvokeWithInvalidFile()
     {
-        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/CoolFileName.php.cs');
+        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/CoolFileName.php.cs', [
+            'method' => ClassDiscoveryProvider::METHOD_PREG
+        ]);
+
+        $this->expectException(Exception\InvalidFileException::class);
+        $stub()->next();
+    }
+
+    public function testTokenInvokeWithInvalidFile()
+    {
+        $stub = new ClassDiscoveryProvider(__DIR__ . '/TestAssets/Rest/*/CoolFileName.php.cs', [
+            'method' => ClassDiscoveryProvider::METHOD_TOKENS
+        ]);
 
         $this->expectException(Exception\InvalidFileException::class);
         $stub()->next();

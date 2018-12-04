@@ -54,10 +54,11 @@ class ClassDiscoveryProvider
 
     /**
      * Set default options
+     * @param array $options
      */
     public static function setDefaultOptions(array $options): void
     {
-        self::$defaultOptions = $options + [
+        self::$defaultOptions = $options + [ //@codeCoverageIgnore
             'method' => self::METHOD_PREG
         ];
     }
@@ -65,18 +66,19 @@ class ClassDiscoveryProvider
     /**
      * Class discovery provider constructor
      * @param string|string[] $pattern
+     * @param array $options
      * @throws Exception\BadMethodCallException
      */
     public function __construct($pattern, array $options = [])
     {
-        if (is_array($pattern)) {
+        if (\is_array($pattern)) {
             $pattern = sprintf('{%s}', implode(',', $pattern));
         }
 
-        if (!is_string($pattern)) {
+        if (!\is_string($pattern)) {
             throw new Exception\BadMethodCallException(sprintf(
                 'Pattern must be string or array of strings, %s given',
-                is_object($pattern) ? get_class($pattern) : gettype($pattern)
+                \is_object($pattern) ? \get_class($pattern) : gettype($pattern)
             ));
         }
 
@@ -92,29 +94,30 @@ class ClassDiscoveryProvider
      */
     public function __invoke(): \Generator
     {
-        foreach ($this->glob($this->pattern) as $file) {
-            switch ($this->options['method'] ?? null) {
-                case self::METHOD_TOKENS:
-                    $fqcn = $this->parseToken($file);
-                    break;
-                case self::METHOD_PREG:
-                    $fqcn = $this->parsePreg($file);
-                    break;
-                case self::METHOD_PATH:
-                    $fqcn = $this->parsePath($file);
-                    break;
-                default:
-                    throw new Exception\BadMethodCallException("Invalid parse method selected");
-            }
+        switch ($this->options['method'] ?? null) {
+            case self::METHOD_TOKENS:
+                $parser = $this->getParseTokenCallable();
+                break;
+            case self::METHOD_PREG:
+                $parser = $this->getParsePregCallable();
+                break;
+            case self::METHOD_PATH:
+                $parser = $this->getParsePathCallable();
+                break;
+            default:
+                throw new Exception\BadMethodCallException('Invalid parse method selected');
+        }
 
-            if (!$fqcn || !class_exists($fqcn)) {
+        foreach ($this->glob($this->pattern) as $file) {
+            $fqcn = $parser($file);
+            if (!$fqcn || !\class_exists($fqcn)) {
                 throw new Exception\ClassNameAmbiguousException(
                     "Determined FQCN `{$fqcn}` does not seem to be correct for file `{$file}`"
                 );
             }
 
             $instance = new $fqcn;
-            if (!is_callable($instance)) {
+            if (!\is_callable($instance)) {
                 throw new Exception\InvalidFileException("Class `{$fqcn}` does not seem to be callable");
             }
 
@@ -125,101 +128,107 @@ class ClassDiscoveryProvider
     /**
      * Get FQCN by parsing file path (PSR-0, PSR-4)
      */
-    private function parsePath(string $file): string
+    private function getParsePathCallable(): callable
     {
-        $baseSrc = $this->options['baseSrc'] ?? false;
-        $prefix = $this->options['prefix'] ?? null;
-        $extension = $this->options['extension'] ?? pathinfo($file, PATHINFO_EXTENSION);
+        return function (string $file) : string {
+            $baseSrc = $this->options['baseSrc'] ?? false;
+            $prefix = $this->options['prefix'] ?? null;
+            $extension = $this->options['extension'] ?? pathinfo($file, PATHINFO_EXTENSION);
 
-        if ($baseSrc && substr($baseSrc, -1) != DIRECTORY_SEPARATOR) {
-            $baseSrc .= DIRECTORY_SEPARATOR;
-        }
+            if ($baseSrc && \substr($baseSrc, -1) !== DIRECTORY_SEPARATOR) {
+                $baseSrc .= DIRECTORY_SEPARATOR;
+            }
 
-        if (substr($extension, 0, 1) != '.') {
-            $extension = '.' . $extension;
-        }
+            if ($extension[0] !== '.') {
+                $extension = '.' . $extension;
+            }
 
-        return $prefix . str_replace([$extension, $baseSrc, DIRECTORY_SEPARATOR], ['', '','\\'], $file);
+            return $prefix . str_replace([$extension, $baseSrc, DIRECTORY_SEPARATOR], ['', '', '\\'], $file);
+        };
     }
 
     /**
      * Get FQCN by parsing file with php tokens (loads whole file into memory)
      * @throws Exception\InvalidFileException
      */
-    private function parseToken(string $file): string
+    private function getParseTokenCallable(): callable
     {
-        $tokens = token_get_all(file_get_contents($file));
-        $tokenStart = $class = $namespace = null;
-        foreach ($tokens as $i => $token) {
-            if (!is_array($token)) {
-                $tokenStart = $tokenStart ? false : $tokenStart;
-                continue;
+        return function (string $file) : string {
+            $tokens = token_get_all(file_get_contents($file));
+            $tokenStart = $class = $namespace = null;
+            foreach ($tokens as $i => $token) {
+                if (!\is_array($token)) {
+                    $tokenStart = $tokenStart ? false : $tokenStart;
+                    continue;
+                }
+
+                [$index, $line] = $token;
+                if ($index === T_WHITESPACE) {
+                    continue;
+                }
+
+                if ($tokenStart) {
+                    $namespace .= $line;
+                    continue;
+                }
+
+                if ($index === T_NAMESPACE) {
+                    $tokenStart = $index;
+                }
+
+                if ($index === T_CLASS) { // n+1 is whitespace, and n+2 is actual class name
+                    $class = $tokens[$i + 2][1];
+                    break;
+                }
             }
 
-            [$index, $line] = $token;
-            if ($index == T_WHITESPACE) {
-                continue;
+            if (!$class) {
+                throw new Exception\InvalidFileException(
+                    "Cannot determinate class name using file `{$file}` and method `token`"
+                );
             }
 
-            if ($tokenStart) {
-                $namespace .= $line;
-                continue;
-            }
-
-            if ($index == T_NAMESPACE) {
-                $tokenStart = $index;
-            }
-
-            if ($index == T_CLASS) { // n+1 is whitespace, and n+2 is actual class name
-                $class = $tokens[$i + 2][1];
-                break;
-            }
-        }
-
-        if (!$class) {
-            throw new Exception\InvalidFileException(
-                "Cannot determinate class name using file `{$file}` and method `token`"
-            );
-        }
-
-        return "$namespace\\$class";
+            return "$namespace\\$class";
+        };
     }
 
     /**
      * Get FQCN by parsing file with regular expression (loads file line by line)
      * @throws Exception\InvalidFileException
      */
-    private function parsePreg(string $file): string
+    private function getParsePregCallable(): callable
     {
-        $fp = fopen($file, 'rb');
+        return function (string $file) : string {
+            $fp = fopen($file, 'rb');
 
-        $inComment = $namespace = $class = null;
-        while ((!$class || !$namespace) && ($line = fgets($fp)) !== false) {
-            $commentEnd = strpos($line, '*/') !== false;
-            if ($inComment) {
-                $inComment = !$commentEnd;
-                continue;
+            $inComment = $namespace = $class = null;
+            while ((!$class || !$namespace) && ($line = fgets($fp)) !== false) {
+                $commentEnd = strpos($line, '*/') !== false;
+                if ($inComment) {
+                    $inComment = !$commentEnd;
+                    continue;
+                }
+
+                if (!$namespace && preg_match(self::REGEX_NAMESPACE, (string)$line, $nsMatch) === 1) {
+                    $namespace = $nsMatch['namespace'];
+                }
+
+                if (!$class && preg_match(self::REGEX_CLASS, (string)$line, $cnMatch) === 1) {
+                    $class = $cnMatch['class'];
+                }
+
+                if (!$commentEnd && strpos($line, '/*') !== false) {
+                    $inComment = true;
+                }
             }
 
-            if (!$namespace && preg_match(self::REGEX_NAMESPACE, (string) $line, $nsMatch) === 1) {
-                $namespace = $nsMatch['namespace'];
+            if (!$class) {
+                throw new Exception\InvalidFileException(
+                    "Cannot determinate class name using file `{$file}` and method `preg`"
+                );
             }
 
-            if (!$class && preg_match(self::REGEX_CLASS, (string) $line, $cnMatch) === 1) {
-                $class = $cnMatch['class'];
-            }
-
-            if (strpos($line, '/*') !== false && !$commentEnd) {
-                $inComment = true;
-            }
-        }
-
-        if (!$class) {
-            throw new Exception\InvalidFileException(
-                "Cannot determinate class name using file `{$file}` and method `preg`"
-            );
-        }
-
-        return "$namespace\\$class";
+            return "$namespace\\$class";
+        };
     }
 }
