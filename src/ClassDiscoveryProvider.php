@@ -154,7 +154,17 @@ class ClassDiscoveryProvider
     private function getParseTokenCallable(): callable
     {
         return function (string $file) : string {
-            $tokens = token_get_all(file_get_contents($file));
+            $fileContent = file_get_contents($file);
+
+            //@codeCoverageIgnoreStart
+            if (false === $fileContent) {
+                throw new Exception\InvalidFileException(
+                    "Cannot read `{$file}`"
+                );
+            }
+            //@codeCoverageIgnoreEnd
+
+            $tokens = token_get_all($fileContent);
             $tokenStart = $class = $namespace = null;
             foreach ($tokens as $i => $token) {
                 if (!\is_array($token)) {
@@ -201,19 +211,31 @@ class ClassDiscoveryProvider
         return function (string $file) : string {
             $fp = fopen($file, 'rb');
 
+            //@codeCoverageIgnoreStart
+            if (false === $fp) {
+                throw new Exception\InvalidFileException(
+                    "Cannot read `{$file}`"
+                );
+            }
+            //@codeCoverageIgnoreEnd
+
             $inComment = $namespace = $class = null;
             while ((!$class || !$namespace) && ($line = fgets($fp)) !== false) {
+                if (false === $line) {
+                    break;
+                }
+
                 $commentEnd = strpos($line, '*/') !== false;
                 if ($inComment) {
                     $inComment = !$commentEnd;
                     continue;
                 }
 
-                if (!$namespace && preg_match(self::REGEX_NAMESPACE, (string)$line, $nsMatch) === 1) {
+                if (!$namespace && preg_match(self::REGEX_NAMESPACE, $line, $nsMatch) === 1) {
                     $namespace = $nsMatch['namespace'];
                 }
 
-                if (!$class && preg_match(self::REGEX_CLASS, (string)$line, $cnMatch) === 1) {
+                if (!$class && preg_match(self::REGEX_CLASS, $line, $cnMatch) === 1) {
                     $class = $cnMatch['class'];
                 }
 
