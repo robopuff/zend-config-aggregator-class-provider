@@ -53,6 +53,11 @@ class ClassDiscoveryProvider
     private $options;
 
     /**
+     * @var array|callable[]
+     */
+    private $parsers;
+
+    /**
      * Set default options
      * @param array $options
      */
@@ -76,14 +81,18 @@ class ClassDiscoveryProvider
         }
 
         if (!\is_string($pattern)) {
-            throw new Exception\BadMethodCallException(sprintf(
-                'Pattern must be string or array of strings, %s given',
-                \is_object($pattern) ? \get_class($pattern) : gettype($pattern)
-            ));
+            throw new Exception\BadMethodCallException(
+                sprintf('Pattern must be string or array of strings, %s given', gettype($pattern))
+            );
         }
 
         $this->pattern = $pattern;
         $this->options = array_merge(self::$defaultOptions, $options);
+        $this->parsers = [
+            self::METHOD_TOKENS => $this->getParseTokenCallable(),
+            self::METHOD_PATH   => $this->getParsePathCallable(),
+            self::METHOD_PREG   => $this->getParsePregCallable()
+        ];
     }
 
     /**
@@ -94,18 +103,9 @@ class ClassDiscoveryProvider
      */
     public function __invoke(): \Generator
     {
-        switch ($this->options['method'] ?? null) {
-            case self::METHOD_TOKENS:
-                $parser = $this->getParseTokenCallable();
-                break;
-            case self::METHOD_PREG:
-                $parser = $this->getParsePregCallable();
-                break;
-            case self::METHOD_PATH:
-                $parser = $this->getParsePathCallable();
-                break;
-            default:
-                throw new Exception\BadMethodCallException('Invalid parse method selected');
+        $parser = $this->parsers[$this->options['method']] ?? null;
+        if (null === $parser) {
+            throw new Exception\BadMethodCallException('Invalid parse method selected');
         }
 
         foreach ($this->glob($this->pattern) as $file) {
@@ -131,8 +131,8 @@ class ClassDiscoveryProvider
     private function getParsePathCallable(): callable
     {
         return function (string $file) : string {
-            $baseSrc = $this->options['baseSrc'] ?? false;
-            $prefix = $this->options['prefix'] ?? null;
+            $baseSrc   = $this->options['baseSrc'] ?? false;
+            $prefix    = $this->options['prefix'] ?? null;
             $extension = $this->options['extension'] ?? pathinfo($file, PATHINFO_EXTENSION);
 
             if ($baseSrc && \substr($baseSrc, -1) !== DIRECTORY_SEPARATOR) {
@@ -149,7 +149,6 @@ class ClassDiscoveryProvider
 
     /**
      * Get FQCN by parsing file with php tokens (loads whole file into memory)
-     * @throws Exception\InvalidFileException
      */
     private function getParseTokenCallable(): callable
     {
@@ -204,7 +203,6 @@ class ClassDiscoveryProvider
 
     /**
      * Get FQCN by parsing file with regular expression (loads file line by line)
-     * @throws Exception\InvalidFileException
      */
     private function getParsePregCallable(): callable
     {
@@ -221,10 +219,7 @@ class ClassDiscoveryProvider
 
             $inComment = $namespace = $class = null;
             while ((!$class || !$namespace) && ($line = fgets($fp)) !== false) {
-                if (false === $line) {
-                    break;
-                }
-
+                $line = (string) $line;
                 $commentEnd = strpos($line, '*/') !== false;
                 if ($inComment) {
                     $inComment = !$commentEnd;
